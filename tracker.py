@@ -113,34 +113,35 @@ class Tracker(object):
             entry = self.parse_line(line)
             self.entries.append(entry)
 
-    def persist_break(self, outfile, entry):
+    def serialize_break(self, entry):
         # noop
-        pass
+        return ''
 
-    def persist_task(self, outfile, entry):
+    def serialize_task(self, entry):
         line = '{} - {} '.format(entry['start'].strftime('%H:%m'),
                                 entry['stop'].strftime('%H:%m'))
         if (entry['customer']):
             line += ' {}: '.format(entry['customer'])
         line += entry['task']
         line += '\n'
-        outfile.write(line)
+        return line
 
-    def persist_new_date(self, outfile, entry):
-        outfile.write('\n')
+    def serialize_new_date(self, entry):
+        line = '\n'
         dte = entry['date']
         weekday = self.WEEKDAYS[dte.weekday()]
-        outfile.write('{}, {}\n'.format(weekday, dte))
+        line += '{}, {}\n'.format(weekday, dte)
+        return line
 
-    def persist_default(self, outfile, entry):
-        outfile.write('not implemented: {} -> {}\n'.format(entry['type'],
-                                                           entry['line']))
+    def serialize_default(self, entry):
+        return 'not implemented: {} -> {}\n'.format(entry['type'], entry['line'])
 
     def persist(self, filename):
         with open(filename, 'w') as outfile:
             for entry in self.entries:
-                fnc = getattr(self, 'persist_' + entry['type'], self.persist_default)
-                fnc(outfile, entry)
+                fnc = getattr(self, 'serialize_' + entry['type'], self.serialize_default)
+                line = fnc(entry)
+                outfile.write(line)
 
 
 for filename in glob.glob('timesheet*.txt'):
