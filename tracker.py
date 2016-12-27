@@ -4,6 +4,7 @@
 
 import datetime
 import glob
+import difflib
 
 class Tracker(object):
 
@@ -16,12 +17,7 @@ class Tracker(object):
         self.entries = []
 
     def get_year_from_filename(self, filename):
-        """TODO: Docstring for get_year_from_filename.
-
-        :filename: TODO
-        :returns: TODO
-
-        """
+        # TODO implement
         return 2016
 
     def set_day(self, day, month, year=None):
@@ -41,7 +37,6 @@ class Tracker(object):
 
         line = line.strip()
         if not line:
-            # todo: reset date
             entry['type'] = 'break'
             self.day = None
             return entry
@@ -81,9 +76,20 @@ class Tracker(object):
 
     def parse_default(self, line):
         entry = self._create_entry(line)
-        # TODO: parse whole day entry (Krank, Urlaub)
         entry['type'] = 'default'
-        entry['duration'] = datetime.timedelta(hours=8)
+        # parse whole day entry (Krank, Urlaub)
+        tags = {'krank': 'Krank',
+                'urlaub': 'Urlaub'}
+        if line.strip().lower() in tags:
+            entry['type'] = 'whole_day'
+            entry['customer'] = 'Intern'
+            entry['task'] = tags[line.strip().lower()]
+            starttime = self.create_datetime('9:00')
+            duration = datetime.timedelta(hours=8)
+            stoptime = starttime + duration
+            entry['start'] = starttime
+            entry['stop'] = stoptime
+            entry['duration'] = duration
         return entry
 
     def parse_task(self, line):
@@ -133,6 +139,9 @@ class Tracker(object):
         line += '{}, {}\n'.format(weekday, dte)
         return line
 
+    def serialize_whole_day(self, entry):
+        return self.serialize_task(entry)
+
     def serialize_default(self, entry):
         return 'not implemented: {} -> {}\n'.format(entry['type'], entry['line'])
 
@@ -143,6 +152,37 @@ class Tracker(object):
                 line = fnc(entry)
                 outfile.write(line)
 
+    def validate_break(self, entry):
+        return []
+
+    def validate_default(self, entry):
+        fnc = getattr(self, 'serialize_' + entry['type'], self.serialize_default)
+        a = fnc(entry)
+        b = entry['line']
+        sm = difflib.SequenceMatcher(None, a, b)
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            if tag == 'equal':
+                continue
+            return ['{:7}   a[{}:{}] --> b[{}:{}] {!r:>8} --> {!r}'
+                    .format(tag, i1, i2, j1, j2, a[i1:i2], b[j1:j2])]
+
+    def validate_whole_day(self, entry):
+        return []
+
+    def validate_task(self, entry):
+        msg = []
+        if not entry['customer']:
+            msg.append('missing customer')
+        return msg
+
+    def validate(self):
+        for entry in self.entries:
+            fnc = getattr(self, 'validate_' + entry['type'], self.validate_default)
+            validation_msgs = fnc(entry)
+            if validation_msgs:
+                print('{}: {}'.format(entry['lineno'],
+                                      '; '.join(validation_msgs)))
+
 
 for filename in glob.glob('timesheet*.txt'):
     print(filename)
@@ -150,6 +190,7 @@ for filename in glob.glob('timesheet*.txt'):
     with open(filename) as fle:
         tracker.parse(fle.readlines())
     tracker.persist('/tmp/' + filename)
+    tracker.validate()
 
 tracker = Tracker()
 tracker.parse_new_date('Do. 22.12.')
