@@ -26,7 +26,11 @@ class Tracker(object):
         self.day = datetime.date(int(year), int(month), int(day))
 
     def create_datetime(self, timestr):
-        h, m = timestr.strip().split(':')
+        h, m = None, None
+        try:
+            h, m = timestr.strip().split(':')
+        except:
+            h, m = timestr.strip().split('.')
         retval = datetime.datetime.combine(self.day, datetime.time(int(h), int(m)))
         return retval
 
