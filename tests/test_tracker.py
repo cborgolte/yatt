@@ -64,3 +64,10 @@ def test_parse_block():
     block_formatted = '\n'.join(trk.serialize())
     assert block_expected == block_formatted
 
+    # assert tracke can read it's own output!
+    trk = tracker.Tracker()
+    lines = block_expected.splitlines()
+    trk.parse(lines)
+    trk.entries
+    block_formatted = '\n'.join(trk.serialize())
+    assert block_expected == block_formatted
