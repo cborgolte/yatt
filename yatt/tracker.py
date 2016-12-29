@@ -108,7 +108,7 @@ class Tracker(object):
         except:
             # TODO: logging
             pass
-        task = part
+        task = part.strip()
         print("duration: {0} on task '{1}'".format(stoptime - starttime, part))
         entry['type'] = 'task'
         entry['start'] = starttime
