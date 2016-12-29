@@ -100,15 +100,25 @@ class Tracker(object):
 
     def parse_task(self, line):
         entry = self._create_entry(line)
-        start, part = line.split('-', 1)
-        stop, part = part.strip().split(' ', 1)
-        starttime = self.create_datetime(start)
-        stoptime = self.create_datetime(stop)
+
+        try:  # to parse 'from - to' time entries
+            start, part = line.split('-', 1)
+            stop, part = part.strip().split(' ', 1)
+            starttime = self.create_datetime(start)
+            stoptime = self.create_datetime(stop)
+        except:  # fall back to duration entry
+            # + 1 hour
+            # 1 hour
+            if line.startswith('+'):
+                line = line[1:]
+            line = 'in ' + line
+            starttime = self.relative_base
+            stoptime = dateparser.parse(line)
         customer = ''
-        try:
+        try:  # to fetch the customer name
             customer, part = part.strip().split(':', 1)
         except:
-            # TODO: logging
+            # TODO: logging -> missing customer name
             pass
         task = part.strip()
         print("duration: {0} on task '{1}'".format(stoptime - starttime, part))
@@ -130,32 +140,37 @@ class Tracker(object):
         return ''
 
     def serialize_task(self, entry):
-        line = '{} - {} '.format(entry['start'].strftime('%H:%m'),
-                                entry['stop'].strftime('%H:%m'))
+        line = '{} - {} '.format(entry['start'].strftime('%H:%M'),
+                                 entry['stop'].strftime('%H:%M'))
         if (entry['customer']):
             line += ' {}: '.format(entry['customer'])
         line += entry['task']
-        line += '\n'
         return line
 
     def serialize_new_date(self, entry):
-        line = '\n'
         dte = entry['date']
         weekday = self.WEEKDAYS[dte.weekday()]
-        line += '{}, {}\n'.format(weekday, dte)
+        line = '{}, {}'.format(weekday, dte)
         return line
 
     def serialize_whole_day(self, entry):
         return self.serialize_task(entry)
 
+    def serialize_comment(self, entry):
+        return entry['comment']
+
     def serialize_default(self, entry):
-        return 'not implemented: {} -> {}\n'.format(entry['type'], entry['line'])
+        return 'not implemented: {} -> {}'.format(entry['type'], entry['line'])
+
+    def serialize(self):
+        for entry in self.entries:
+            fnc = getattr(self, 'serialize_' + entry['type'], self.serialize_default)
+            line = fnc(entry)
+            yield line
 
     def persist(self, filename):
         with open(filename, 'w') as outfile:
-            for entry in self.entries:
-                fnc = getattr(self, 'serialize_' + entry['type'], self.serialize_default)
-                line = fnc(entry)
+            for line in self.serialize():
                 outfile.write(line)
 
     def validate_break(self, entry):

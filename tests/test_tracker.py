@@ -42,3 +42,19 @@ def test_parse_date():
     entry = trk.parse_new_date(line)
     assert trk.day == datetime.date(2016, 10, 26)
     assert entry['type'] == 'new_date'
+
+
+def test_parse_block():
+    block = """Mo. 26.8.2010
+    9:10 -  11:55 task w/o a customer entry
+    10:00 - 14:20 A Customer: But Time is overlapping
+    # a comment on line 4
+    + 1 h         Another Customer: relative time entry
+    """
+    trk = tracker.Tracker()
+    lines = block.splitlines()
+    trk.parse(lines)
+    trk.entries
+    block_formatted = '\n'.join(trk.serialize())
+    print(block_formatted)
+
