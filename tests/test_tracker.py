@@ -16,3 +16,11 @@ def test_parse_task():
     assert entry['stop'] == datetime.datetime(2016, 12, 31, 11, 33)
     assert entry['customer'] == 'MyCustomer'
     assert entry['task'] == 'Ticket-1234 Debugging Workflow Engine'
+
+
+def test_parse_date():
+    line = "Thursday, 26.10."  # TODO: thursday need's to be validated as wrong
+    trk = tracker.Tracker()
+    entry = trk.parse_new_date(line)
+    assert trk.day == datetime.date(2016, 10, 26)
+    assert entry['type'] == 'new_date'

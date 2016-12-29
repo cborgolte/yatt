@@ -5,6 +5,8 @@
 import datetime
 import glob
 import difflib
+import dateparser
+
 
 class Tracker(object):
 
@@ -13,17 +15,16 @@ class Tracker(object):
     def __init__(self):
         self.lineno = 0
         self.day = None
-        self.year = 2016
+        self.relative_base = datetime.datetime.now()
         self.entries = []
 
-    def get_year_from_filename(self, filename):
-        # TODO implement
-        return 2016
+    def set_day(self, date):
+        self.day = date
+        # start working day at 9:00 h
+        self.set_relative_base(datetime.datetime.combine(date, datetime.time(9, 0)))
 
-    def set_day(self, day, month, year=None):
-        if not year:
-            year = self.year
-        self.day = datetime.date(int(year), int(month), int(day))
+    def set_relative_base(self, relative_base):
+        self.relative_base = relative_base
 
     def create_datetime(self, timestr):
         h, m = None, None
@@ -31,7 +32,9 @@ class Tracker(object):
             h, m = timestr.strip().split(':')
         except:
             h, m = timestr.strip().split('.')
-        retval = datetime.datetime.combine(self.day, datetime.time(int(h), int(m)))
+        time = datetime.time(int(h), int(m))
+        retval = datetime.datetime.combine(self.day, time)
+        self.set_relative_base(retval)
         return retval
 
     def parse_line(self, line):
@@ -69,11 +72,10 @@ class Tracker(object):
 
     def parse_new_date(self, line):
         entry = self._create_entry(line)
-        weekday, date = line.split()
-        day, month, *_ = date.split('.')
-        self.set_day(day.strip(), month.strip())
-        print("---> {0}".format(self.day))
-        #todo: check weekday w/ real date
+        date = dateparser.parse(line, settings={'RELATIVE_BASE':
+                                                self.relative_base})
+        self.set_day(date.date())
+        # TODO: check weekday w/ real date
         entry['type'] = 'new_date'
         entry['date'] = self.day
         return entry
