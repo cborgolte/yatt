@@ -51,10 +51,16 @@ def test_parse_block():
     # a comment on line 4
     + 1 h         Another Customer: relative time entry
     """
+    block_expected = """Do, 2010-08-26
+09:10 - 11:55 task w/o a customer entry
+10:00 - 14:20 A Customer: But Time is overlapping
+# a comment on line 4
+14:20 - 15:20 Another Customer: relative time entry
+"""
     trk = tracker.Tracker()
     lines = block.splitlines()
     trk.parse(lines)
     trk.entries
     block_formatted = '\n'.join(trk.serialize())
-    print(block_formatted)
+    assert block_expected == block_formatted
 

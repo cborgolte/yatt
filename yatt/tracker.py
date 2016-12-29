@@ -98,6 +98,16 @@ class Tracker(object):
             entry['duration'] = duration
         return entry
 
+    def _parse_duration_str(self, duration_str):
+        try:
+            h, m = (int(val.strip()) for val in duration_str.split(':', 1))
+            duration = datetime.timedelta(hours=h, minutes=m)
+            return duration
+        except:
+            h = int(duration_str.strip())
+            duration = datetime.timedelta(hours=h)
+            return duration
+
     def parse_task(self, line):
         entry = self._create_entry(line)
 
@@ -106,26 +116,30 @@ class Tracker(object):
             stop, part = part.strip().split(' ', 1)
             starttime = self.create_datetime(start)
             stoptime = self.create_datetime(stop)
+            duration = stoptime - starttime
         except:  # fall back to duration entry
-            # + 1 hour
-            # 1 hour
+            # + 1:00 h
+            # 4 h
             if line.startswith('+'):
                 line = line[1:]
-            line = 'in ' + line
+            # split at marker for hour
+            duration_str, part = line.split(' h ', 1)
             starttime = self.relative_base
-            stoptime = dateparser.parse(line)
+            duration = self._parse_duration_str(duration_str)
+            stoptime = starttime + duration
+
         customer = ''
         try:  # to fetch the customer name
             customer, part = part.strip().split(':', 1)
         except:
             # TODO: logging -> missing customer name
             pass
+
         task = part.strip()
-        print("duration: {0} on task '{1}'".format(stoptime - starttime, part))
         entry['type'] = 'task'
         entry['start'] = starttime
         entry['stop'] = stoptime
-        entry['duration'] = stoptime - starttime
+        entry['duration'] = duration
         entry['customer'] = customer
         entry['task'] = task
         return entry
@@ -143,7 +157,7 @@ class Tracker(object):
         line = '{} - {} '.format(entry['start'].strftime('%H:%M'),
                                  entry['stop'].strftime('%H:%M'))
         if (entry['customer']):
-            line += ' {}: '.format(entry['customer'])
+            line += '{}: '.format(entry['customer'])
         line += entry['task']
         return line
 
