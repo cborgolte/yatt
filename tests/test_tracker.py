@@ -43,6 +43,18 @@ def test_parse_date():
     assert trk.day == datetime.date(2016, 10, 26)
     assert entry['type'] == 'new_date'
 
+    line = "Mo, 2010-10-26"
+    trk = tracker.Tracker()
+    entry = trk.parse_new_date(line)
+    assert trk.day == datetime.date(2010, 10, 26)
+    assert entry['type'] == 'new_date'
+
+    line = "2010-10-26"
+    trk = tracker.Tracker()
+    entry = trk.parse_new_date(line)
+    assert trk.day == datetime.date(2010, 10, 26)
+    assert entry['type'] == 'new_date'
+
 
 def test_parse_block():
     block = """Mo. 26.8.2010
@@ -64,10 +76,10 @@ def test_parse_block():
     block_formatted = '\n'.join(trk.serialize())
     assert block_expected == block_formatted
 
-    # assert tracke can read it's own output!
+    # assert that tracker can read it's own output!
     trk = tracker.Tracker()
     lines = block_expected.splitlines()
     trk.parse(lines)
     trk.entries
     block_formatted = '\n'.join(trk.serialize())
-    assert block_expected == block_formatted
+    assert block_expected.rstrip() == block_formatted

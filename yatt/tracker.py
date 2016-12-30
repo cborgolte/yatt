@@ -72,8 +72,13 @@ class Tracker(object):
 
     def parse_new_date(self, line):
         entry = self._create_entry(line)
-        date = dateparser.parse(line, settings={'RELATIVE_BASE':
-                                                self.relative_base})
+        token = line.strip().split()
+        if len(token) == 1:
+            datestr, = token
+        else:
+            weekday, datestr  = token
+        date = dateparser.parse(datestr, settings={'RELATIVE_BASE':
+                                                   self.relative_base})
         self.set_day(date.date())
         # TODO: check weekday w/ real date
         entry['type'] = 'new_date'
@@ -217,17 +222,3 @@ class Tracker(object):
             if validation_msgs:
                 print('{}: {}'.format(entry['lineno'],
                                       '; '.join(validation_msgs)))
-
-
-for filename in glob.glob('timesheet*.txt'):
-    print(filename)
-    tracker = Tracker()
-    with open(filename) as fle:
-        tracker.parse(fle.readlines())
-    tracker.persist('/tmp/' + filename)
-    tracker.validate()
-
-tracker = Tracker()
-tracker.parse_new_date('Do. 22.12.')
-tracker.parse_task("7:00 - 7:20 Intern: Fahrtkostenaufstellung")
-
