@@ -3,9 +3,9 @@
 
 
 import datetime
-import glob
-import difflib
 import dateparser
+import yatt.serializer
+import yatt.parser
 
 
 class Tracker(object):
@@ -154,71 +154,7 @@ class Tracker(object):
             entry = self.parse_line(line)
             self.entries.append(entry)
 
-    def serialize_break(self, entry):
-        # noop
-        return ''
-
-    def serialize_task(self, entry):
-        line = '{} - {} '.format(entry['start'].strftime('%H:%M'),
-                                 entry['stop'].strftime('%H:%M'))
-        if (entry['customer']):
-            line += '{}: '.format(entry['customer'])
-        line += entry['task']
-        return line
-
-    def serialize_new_date(self, entry):
-        dte = entry['date']
-        weekday = self.WEEKDAYS[dte.weekday()]
-        line = '{}, {}'.format(weekday, dte)
-        return line
-
-    def serialize_whole_day(self, entry):
-        return self.serialize_task(entry)
-
-    def serialize_comment(self, entry):
-        return entry['comment']
-
-    def serialize_default(self, entry):
-        return 'not implemented: {} -> {}'.format(entry['type'], entry['line'])
-
-    def serialize(self):
-        for entry in self.entries:
-            fnc = getattr(self, 'serialize_' + entry['type'], self.serialize_default)
-            line = fnc(entry)
-            yield line
-
     def persist(self, filename):
         with open(filename, 'w') as outfile:
-            for line in self.serialize():
+            for line in yatt.serializer.serialize_entries(self.entries):
                 outfile.write(line)
-
-    def validate_break(self, entry):
-        return []
-
-    def validate_default(self, entry):
-        fnc = getattr(self, 'serialize_' + entry['type'], self.serialize_default)
-        a = fnc(entry)
-        b = entry['line']
-        sm = difflib.SequenceMatcher(None, a, b)
-        for tag, i1, i2, j1, j2 in sm.get_opcodes():
-            if tag == 'equal':
-                continue
-            return ['{:7}   a[{}:{}] --> b[{}:{}] {!r:>8} --> {!r}'
-                    .format(tag, i1, i2, j1, j2, a[i1:i2], b[j1:j2])]
-
-    def validate_whole_day(self, entry):
-        return []
-
-    def validate_task(self, entry):
-        msg = []
-        if not entry['customer']:
-            msg.append('missing customer')
-        return msg
-
-    def validate(self):
-        for entry in self.entries:
-            fnc = getattr(self, 'validate_' + entry['type'], self.validate_default)
-            validation_msgs = fnc(entry)
-            if validation_msgs:
-                print('{}: {}'.format(entry['lineno'],
-                                      '; '.join(validation_msgs)))
