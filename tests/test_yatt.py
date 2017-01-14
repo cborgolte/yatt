@@ -75,6 +75,12 @@ def test_parse_date():
     assert context['day'] == datetime.date(2010, 10, 21)
     assert entry['type'] == 'new_date'
 
+    line = "Do. 12.01."
+    entry = dict(line=line)
+    entry = parser.parse_new_date(entry, context)
+    assert context['day'] == datetime.date(2016, 1, 12)
+    assert entry['type'] == 'new_date'
+
 
 def test_parse_and_format_block():
     block = """Mo. 26.8.2010

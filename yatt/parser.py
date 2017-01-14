@@ -6,23 +6,6 @@ import datetime
 import dateparser
 
 
-### class Parser(object):
-###
-###     def __init__(self):
-###         self.lineno = 0
-###         self.day = None
-###         self.relative_base = datetime.datetime.now()
-###         self.entries = []
-###
-###     def set_day(self, date):
-###         self.day = date
-###         # start working day at 9:00 h
-###         self.set_relative_base(datetime.datetime.combine(date, datetime.time(9, 0)))
-###
-###     def set_relative_base(self, relative_base):
-###         self.relative_base = relative_base
-
-
 def set_day(date, context):
     context['day'] = date
     # start working day at 9:00 h
@@ -48,13 +31,16 @@ def parse_new_date(entry, context):
     if len(token) == 1:
         datestr, = token
     else:
-        weekday, datestr  = token
+        weekday, datestr = token
     date = dateparser.parse(datestr,
+                            languages=['de', 'en'],
                             settings={'RELATIVE_BASE': context['relative_base']})
+    if date is None:
+        raise Exception("Could not parse date")
     context['day'] = date.date()
     # TODO: check weekday w/ real date
     entry['type'] = 'new_date'
-    entry['date'] = date.date()
+    entry['day'] = date.date()
     return entry
 
 
