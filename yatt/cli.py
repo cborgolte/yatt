@@ -12,14 +12,26 @@ def collect(entry, entries_per_date):
 
 
 def get_cumulated_hours(entries_per_date):
+    result = {}
     keys = entries_per_date.keys()
     for day in sorted(keys, reverse=True):
         task_entries_of_day = [entry for entry in entries_per_date[day]
                                if entry['type'] == 'task']
-        duration_total = datetime.timedelta(0)
+        durations_per_project = defaultdict(datetime.timedelta)
         for entry in task_entries_of_day:
-            duration_total += entry['duration']
-        print('{} -> {}'.format(day, duration_total))
+            project = entry['customer']
+            durations_per_project[project] += entry['duration']
+        result[day] = dict(durations_per_project)
+    return result
+
+
+def print_cumulated_hours(cumulated_hours):
+    for day, entries in sorted(cumulated_hours.items()):
+        print(day)
+        for customer, td in entries.items():
+            hours = datetime.datetime.combine(day, datetime.time()) + td
+            print('\t{}: {} h'.format(customer, hours.strftime('%H:%M')))
+        print()
 
 
 @click.command()
@@ -33,10 +45,8 @@ def main(filename):
             for entry in parser.parse(infile.readlines()):
                 collect(entry, entries_per_date)
 
-    import pprint
-    pprint.pprint(entries_per_date)
-    #pprint.pprint(list(entries_per_date.keys()))
-    get_cumulated_hours(entries_per_date)
+    cumulated_hours = get_cumulated_hours(entries_per_date)
+    print_cumulated_hours(cumulated_hours)
 
 if __name__ == "__main__":
     main()
