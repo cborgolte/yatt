@@ -17,20 +17,27 @@ def get_cumulated_hours(entries_per_date):
     for day in sorted(keys, reverse=True):
         task_entries_of_day = [entry for entry in entries_per_date[day]
                                if entry['type'] == 'task']
-        durations_per_project = defaultdict(datetime.timedelta)
+        prj_based_data = {}
         for entry in task_entries_of_day:
             project = entry['customer']
-            durations_per_project[project] += entry['duration']
-        result[day] = dict(durations_per_project)
+            project_data = prj_based_data.setdefault(project,
+                                                     {'duration': datetime.timedelta(0),
+                                                      'tasks': set()})
+            project_data['duration'] += entry['duration']
+            project_data['tasks'].add(entry['task'])
+        result[day] = prj_based_data
     return result
 
 
 def print_cumulated_hours(cumulated_hours):
     for day, entries in sorted(cumulated_hours.items()):
         print(day)
-        for customer, td in entries.items():
+        for customer, project_data in entries.items():
+            td = project_data['duration']
+            tasks = '; '.join(project_data['tasks'])
             hours = datetime.datetime.combine(day, datetime.time()) + td
-            print('\t{}: {} h'.format(customer, hours.strftime('%H:%M')))
+            print('    {}: {} h - {}'.format(customer, hours.strftime('%H:%M'),
+                                             tasks))
         print()
 
 
