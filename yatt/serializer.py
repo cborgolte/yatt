@@ -12,7 +12,7 @@ def serialize_break(entry):
 
 def serialize_task(entry):
     line = '{} - {} '.format(entry['start'].strftime('%H:%M'),
-                                entry['stop'].strftime('%H:%M'))
+                             entry['stop'].strftime('%H:%M'))
     if (entry['customer']):
         line += '{}: '.format(entry['customer'])
     line += entry['task']
@@ -20,7 +20,7 @@ def serialize_task(entry):
 
 
 def serialize_new_date(entry):
-    dte = entry['date']
+    dte = entry['day']
     weekday = WEEKDAYS[dte.weekday()]
     line = '{}, {}'.format(weekday, dte)
     return line

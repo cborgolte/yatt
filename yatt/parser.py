@@ -32,9 +32,16 @@ def parse_new_date(entry, context):
         datestr, = token
     else:
         weekday, datestr = token
-    date = dateparser.parse(datestr,
-                            languages=['de', 'en'],
-                            settings={'RELATIVE_BASE': context['relative_base']})
+
+    date = None
+    try:
+        # dateparse can't handle iso8601 in a robust way ...
+        y, m, d = datestr.split('-')
+        date = datetime.datetime(int(y), int(m), int(d))
+    except Exception:
+        date = dateparser.parse(datestr,
+                                languages=['de', 'en'],
+                                settings={'RELATIVE_BASE': context['relative_base']})
     if date is None:
         raise Exception("Could not parse date")
     context['day'] = date.date()
