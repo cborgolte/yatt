@@ -36,8 +36,10 @@ def print_cumulated_hours(cumulated_hours):
             td = project_data['duration']
             tasks = '; '.join(project_data['tasks'])
             hours = datetime.datetime.combine(day, datetime.time()) + td
-            print('    {}: {} h - {}'.format(customer, hours.strftime('%H:%M'),
-                                             tasks))
+            print('    {}: {} ({:3.2f}) h - {}'.format(customer,
+                                                  hours.strftime('%H:%M'),
+                                                  hours.hour + hours.minute / 60.,
+                                                  tasks))
         print()
 
 
