@@ -30,17 +30,30 @@ def get_cumulated_hours(entries_per_date):
 
 
 def print_cumulated_hours(cumulated_hours):
+    working_hours = datetime.timedelta(hours=8)
+    overtime_total = datetime.timedelta(0)
     for day, entries in sorted(cumulated_hours.items()):
         print(day)
+        duration_at_day = datetime.timedelta(0)
         for customer, project_data in entries.items():
             td = project_data['duration']
+            duration_at_day += td
             tasks = '; '.join(project_data['tasks'])
             hours = datetime.datetime.combine(day, datetime.time()) + td
             print('    {}: {} ({:3.2f}) h - {}'.format(customer,
                                                   hours.strftime('%H:%M'),
                                                   hours.hour + hours.minute / 60.,
                                                   tasks))
-        print()
+        overtime = duration_at_day - working_hours
+        overtime_total += overtime
+        overtime_hours = datetime.datetime.combine(day, datetime.time()) + overtime
+        overtime_str = overtime_hours.strftime('%H:%M')
+        overtime_total_hours = datetime.datetime.combine(day, datetime.time()) + overtime_total
+        overtime_total_str = overtime_total_hours.strftime('%H:%M')
+        duration_hours = datetime.datetime.combine(day, datetime.time()) + duration_at_day
+        duration_str = duration_hours.strftime('%H:%M')
+        print('Total duration: {}\tOvertime: {}\n Overtime total: {}'
+              .format(duration_str, overtime_str, overtime_total_str));
 
 
 @click.command()
