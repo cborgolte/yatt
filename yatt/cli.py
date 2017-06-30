@@ -46,8 +46,12 @@ def print_cumulated_hours(cumulated_hours):
                                                   tasks))
         overtime = duration_at_day - working_hours
         overtime_total += overtime
-        overtime_hours = datetime.datetime.combine(day, datetime.time()) + overtime
-        overtime_str = overtime_hours.strftime('%H:%M')
+        if overtime.days >= 0:
+            overtime_hours = datetime.datetime.combine(day, datetime.time()) + overtime
+            overtime_str = overtime_hours.strftime('%H:%M')
+        else:
+            overtime_hours = datetime.datetime.combine(day, datetime.time()) - overtime
+            overtime_str = '-{}'.format(overtime_hours.strftime('%H:%M'))
         overtime_total_hours = datetime.datetime.combine(day, datetime.time()) + overtime_total
         overtime_total_str = overtime_total_hours.strftime('%H:%M')
         duration_hours = datetime.datetime.combine(day, datetime.time()) + duration_at_day
