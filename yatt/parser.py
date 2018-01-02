@@ -17,7 +17,7 @@ def create_datetime(timestr, context):
     h, m = None, None
     try:
         h, m = timestr.strip().split(':')
-    except:
+    except Exception:
         h, m = timestr.strip().split('.')
     time = datetime.time(int(h), int(m))
     retval = datetime.datetime.combine(context['day'], time)
@@ -56,7 +56,7 @@ def _parse_duration_str(duration_str):
         h, m = (int(val.strip()) for val in duration_str.split(':', 1))
         duration = datetime.timedelta(hours=h, minutes=m)
         return duration
-    except:
+    except Exception:
         h = int(duration_str.strip())
         duration = datetime.timedelta(hours=h)
         return duration
@@ -71,7 +71,7 @@ def parse_task(entry, context):
         starttime = create_datetime(start, context)
         stoptime = create_datetime(stop, context)
         duration = stoptime - starttime
-    except:  # fall back to duration entry
+    except Exception:  # fall back to duration entry
         # + 1:00 h
         # 4 h
         if line.startswith('+'):
@@ -85,7 +85,7 @@ def parse_task(entry, context):
     customer = ''
     try:  # to fetch the customer name
         customer, part = part.strip().split(':', 1)
-    except:
+    except Exception:
         # TODO: logging -> missing customer name
         pass
 
@@ -139,13 +139,13 @@ def parse_line(line, context):
     # parse date entry
     try:
         return parse_new_date(entry, context)
-    except:
+    except Exception:
         pass
 
     # parse time entry
     try:
         return parse_task(entry, context)
-    except:
+    except Exception:
         pass
 
     return parse_default(entry, context)

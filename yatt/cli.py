@@ -40,10 +40,11 @@ def print_cumulated_hours(cumulated_hours):
             duration_at_day += td
             tasks = '; '.join(project_data['tasks'])
             hours = datetime.datetime.combine(day, datetime.time()) + td
-            print('    {}: {} ({:3.2f}) h - {}'.format(customer,
-                                                  hours.strftime('%H:%M'),
-                                                  hours.hour + hours.minute / 60.,
-                                                  tasks))
+            print('    {}: {} ({:3.2f}) h - {}'
+                  .format(customer,
+                          hours.strftime('%H:%M'),
+                          hours.hour + hours.minute / 60.,
+                          tasks))
         overtime = duration_at_day - working_hours
         overtime_total += overtime
         if overtime.days >= 0:
@@ -57,7 +58,7 @@ def print_cumulated_hours(cumulated_hours):
         duration_hours = datetime.datetime.combine(day, datetime.time()) + duration_at_day
         duration_str = duration_hours.strftime('%H:%M')
         print('Total duration: {}\tOvertime: {}\n Overtime total: {}'
-              .format(duration_str, overtime_str, overtime_total_str));
+              .format(duration_str, overtime_str, overtime_total_str))
 
 
 @click.command()
@@ -73,6 +74,7 @@ def main(filename):
 
     cumulated_hours = get_cumulated_hours(entries_per_date)
     print_cumulated_hours(cumulated_hours)
+
 
 if __name__ == "__main__":
     main()
